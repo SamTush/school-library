@@ -10,7 +10,7 @@ module StudentModule
     end
 
     def play_hooky
-      "¯\\(ツ)/¯"
+      '¯\\(ツ)/¯'
     end
   end
 end
