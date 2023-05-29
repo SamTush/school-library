@@ -1,33 +1,31 @@
-require_relative './people/person'
-require_relative './people/student'
-require_relative './people/teacher'
-require_relative './book'
 require_relative './rental'
+require_relative './refactor/create_display_book'
+require_relative './refactor/create_display_teacher'
+require_relative './refactor/create_display_student'
 
 class App
-  attr_accessor :books, :people
+  attr_accessor :people, :books
 
   def initialize
-    @books = []
+    @books = CreateDisplayBook.new
     @people = []
   end
 
   def list_all_books
-    if @books.empty?
-      puts 'No books available'
-    else
-      @books.each do |book|
-        puts "Title: '#{book.title}', Author: #{book.author}"
-      end
-    end
+    @books.list_all_books
+  end
+
+  def create_book
+    @books.create_book
   end
 
   def list_all_people
     if @people.empty?
       puts 'No person created'
     else
+      count = 0
       @people.each do |person|
-        puts "[#{person.class}] Name: #{person.name}, ID: #{person.id}, Age: #{person.age}"
+        puts "Number: #{count += 1} [#{person.class}] Name: #{person.name}, ID: #{person.id}, Age: #{person.age}"
       end
     end
   end
@@ -48,75 +46,34 @@ class App
   end
 
   def create_student
-    print 'Age: '
-    age = gets.chomp.to_i
-    print 'Name: '
-    name = gets.chomp
-    print 'Has parent permission? [Y/N]: '
-    parent_permission = gets.chomp
-    parent_permission = parent_permission.downcase != 'n'
-    student = Student.new(age, name, parent_permission: parent_permission)
-    puts 'Person created successfully'
+    students = CreateStudent.new
+    student = students.create_student
     @people << student
   end
 
   def create_teacher
-    print 'Age: '
-    age = gets.chomp.to_i
-    print 'Name: '
-    name = gets.chomp
-    print 'Specialization: '
-    specialization = gets.chomp
-    teacher = Teacher.new(age, specialization, name)
-    puts 'Person created successfully'
+    teachers = CreateDisplayTeacher.new
+    teacher = teachers.create_teacher
     @people << teacher
   end
 
-  def create_book
-    print 'Title: '
-    title = gets.chomp
-    print 'Author: '
-    author = gets.chomp
-    book = Book.new(title, author)
-    puts 'Book created successfully'
-    @books << book
-  end
-
   def create_rental
-    if @books.empty?
-      puts 'No books available to rent'
+    if @books.books.empty? || @people.empty?
+      puts 'Make sure there is a book to rent or a person to rent it'
     else
       puts 'Select a book from the following list by number'
-      display_books
-
-      if @people.empty?
-        puts 'No persons created. Kindly create person before renting'
-      else
-        puts 'Select a person from the following list (not id)'
-        display_people
-
-        print 'Date: '
-        date = gets.chomp
-        Rental.new(date, @selected_book, @selected_person)
-        puts 'Rental created successfully'
-      end
+      @books.list_all_books
+      index = gets.chomp.to_i
+      @selected_book = @books.books[index - 1]
+      puts 'Select a person from the following list (not id)'
+      list_all_people
+      index = gets.chomp.to_i
+      @selected_person = @people[index - 1]
+      print 'Date: '
+      date = gets.chomp
+      Rental.new(date, @selected_book, @selected_person)
+      puts 'Rental created successfully'
     end
-  end
-
-  def display_books
-    @books.each_with_index do |book, index|
-      puts "#{index}) Title: #{book.title}, Author: #{book.author}"
-    end
-    index = gets.chomp.to_i
-    @selected_book = @books[index]
-  end
-
-  def display_people
-    @people.each_with_index do |person, index|
-      puts "#{index}) [#{person.class}] Name: #{person.name}, ID: #{person.id}, Age: #{person.age}"
-    end
-    index = gets.chomp.to_i
-    @selected_person = @people[index]
   end
 
   def list_rentals_of_person
