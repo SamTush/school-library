@@ -3,6 +3,7 @@ require_relative './people/student'
 require_relative './people/teacher'
 require_relative './book'
 require_relative './rental'
+
 class App
   attr_accessor :books, :people
 
