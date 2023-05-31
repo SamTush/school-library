@@ -138,5 +138,43 @@ class App
     File.write('person.json', person_data)
   end
 
- 
+  def load_books
+    condition = File.exist?('book.json')
+    return unless condition
+
+    book_json = File.read('book.json')
+    book_data = JSON.parse(book_json)
+    book_data.each do |book|
+      @books.books << Book.new(book['title'], book['author'])
+    end
+  end
+
+  def load_rentals
+    condition = File.exist?('rental.json')
+    return unless condition
+
+    rental_json = File.read('rental.json')
+    rental_data = JSON.parse(rental_json)
+    rental_data.each do |rental|
+      book = @books.books.select { |bok| bok.title == rental['book'] && bok.author == rental['author'] }.first
+      person = @people.select { |persn| persn.id == rental['person_id'] }.first
+      @rentals << Rental.new(rental['date'], book, person)
+    end
+  end
+
+  def load_people
+    condition = File.exist?('person.json')
+    return unless condition
+
+    person_json = File.read('person.json')
+    person_data = JSON.parse(person_json)
+    person_data.each do |person|
+      @people << if person['class'] == 'Student'
+                   Student.new(person['age'], person['name'], person['id'],
+                               parent_permission: person['parent_permission'])
+                 else
+                   Teacher.new(person['age'], person['specialization'], person['name'], person['id'])
+                 end
+    end
+  end
 end
