@@ -2,6 +2,7 @@ require_relative './rental'
 require_relative './refactor/create_display_book'
 require_relative './refactor/create_display_teacher'
 require_relative './refactor/create_display_student'
+require 'json'
 
 class App
   attr_accessor :people, :books
@@ -9,6 +10,7 @@ class App
   def initialize
     @books = CreateDisplayBook.new
     @people = []
+    @rentals = []
   end
 
   def list_all_books
@@ -71,8 +73,9 @@ class App
       @selected_person = @people[index - 1]
       print 'Date: '
       date = gets.chomp
-      Rental.new(date, @selected_book, @selected_person)
+      rental = Rental.new(date, @selected_book, @selected_person)
       puts 'Rental created successfully'
+      @rentals << rental
     end
   end
 
@@ -87,6 +90,91 @@ class App
       person_selected.rentals.map do |rental|
         puts "Date: #{rental.date}, Book '#{rental.book.title}' by #{rental.book.author}"
       end
+    end
+  end
+
+  def preserve_books
+    File.exist?('book.json')
+    books = []
+    @books.books.each do |book|
+      bok = { title: book.title, author: book.author }
+      books << bok unless books.include?(bok)
+    end
+    return if books.empty?
+
+    book_data = JSON.generate(books)
+    File.write('book.json', book_data)
+  end
+
+  def preserve_rentals
+    File.exist?('rental.json')
+    rentals = []
+    @rentals.each do |rental|
+      rent = { date: rental.date, book: rental.book.title, author: rental.book.author, person_id: rental.person.id }
+      rentals << rent unless rentals.include?(rent)
+    end
+    return if rentals.empty?
+
+    rental_data = JSON.generate(rentals)
+    File.write('rental.json', rental_data)
+  end
+
+  def preserve_people
+    File.exist?('person.json')
+    person = []
+    @people.each do |data|
+      per = if data.instance_of?(Student)
+              { class: data.class, name: data.name, id: data.id, age: data.age,
+                parent_permission: data.parent_permission }
+            else
+              { class: data.class, name: data.name, id: data.id, age: data.age, specialization: data.specialization }
+            end
+      person << per unless person.include?(per)
+    end
+
+    return if person.empty?
+
+    person_data = JSON.generate(person)
+    File.write('person.json', person_data)
+  end
+
+  def load_books
+    condition = File.exist?('book.json')
+    return unless condition
+
+    book_json = File.read('book.json')
+    book_data = JSON.parse(book_json)
+    book_data.each do |book|
+      @books.books << Book.new(book['title'], book['author'])
+    end
+  end
+
+  def load_rentals
+    condition = File.exist?('rental.json')
+    return unless condition
+
+    rental_json = File.read('rental.json')
+    rental_data = JSON.parse(rental_json)
+    rental_data.each do |rental|
+      book = @books.books.select { |bok| bok.title == rental['book'] && bok.author == rental['author'] }.first
+      person = @people.select { |persn| persn.id == rental['person_id'] }.first
+      @rentals << Rental.new(rental['date'], book, person)
+    end
+  end
+
+  def load_people
+    condition = File.exist?('person.json')
+    return unless condition
+
+    person_json = File.read('person.json')
+    person_data = JSON.parse(person_json)
+    person_data.each do |person|
+      @people << if person['class'] == 'Student'
+                   Student.new(person['age'], person['name'], person['id'],
+                               parent_permission: person['parent_permission'])
+                 else
+                   Teacher.new(person['age'], person['specialization'], person['name'], person['id'])
+                 end
     end
   end
 end
