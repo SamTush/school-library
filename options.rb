@@ -46,7 +46,10 @@ def list_rentals_of_person(app)
   app.list_rentals_of_person
 end
 
-def exit_app(_)
+def exit_app(app)
   puts 'Thank you for using this app!'
+  app.preserve_books
+  app.preserve_rentals
+  app.preserve_people
   exit
 end

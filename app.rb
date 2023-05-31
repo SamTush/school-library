@@ -2,6 +2,7 @@ require_relative './rental'
 require_relative './refactor/create_display_book'
 require_relative './refactor/create_display_teacher'
 require_relative './refactor/create_display_student'
+require 'json'
 
 class App
   attr_accessor :people, :books
@@ -9,6 +10,7 @@ class App
   def initialize
     @books = CreateDisplayBook.new
     @people = []
+    @rentals = []
   end
 
   def list_all_books
@@ -71,8 +73,9 @@ class App
       @selected_person = @people[index - 1]
       print 'Date: '
       date = gets.chomp
-      Rental.new(date, @selected_book, @selected_person)
+      rental = Rental.new(date, @selected_book, @selected_person)
       puts 'Rental created successfully'
+      @rentals << rental
     end
   end
 
@@ -89,4 +92,51 @@ class App
       end
     end
   end
+
+  def preserve_books
+    File.exist?('book.json')
+    books = []
+    @books.books.each do |book|
+      bok = { title: book.title, author: book.author }
+      books << bok unless books.include?(bok)
+    end
+    return if books.empty?
+
+    book_data = JSON.generate(books)
+    File.write('book.json', book_data)
+  end
+
+  def preserve_rentals
+    File.exist?('rental.json')
+    rentals = []
+    @rentals.each do |rental|
+      rent = { date: rental.date, book: rental.book.title, author: rental.book.author, person_id: rental.person.id }
+      rentals << rent unless rentals.include?(rent)
+    end
+    return if rentals.empty?
+
+    rental_data = JSON.generate(rentals)
+    File.write('rental.json', rental_data)
+  end
+
+  def preserve_people
+    File.exist?('person.json')
+    person = []
+    @people.each do |data|
+      per = if data.instance_of?(Student)
+              { class: data.class, name: data.name, id: data.id, age: data.age,
+                parent_permission: data.parent_permission }
+            else
+              { class: data.class, name: data.name, id: data.id, age: data.age, specialization: data.specialization }
+            end
+      person << per unless person.include?(per)
+    end
+
+    return if person.empty?
+
+    person_data = JSON.generate(person)
+    File.write('person.json', person_data)
+  end
+
+ 
 end
