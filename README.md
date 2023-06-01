@@ -66,6 +66,10 @@ Clone this repository to your desired folder:
 
 - GitHub: [@githubhandle](https://github.com/SamTush)
 
+👤 **Fuad Moin**
+
+- GitHub: [@githubhandle](https://github.com/fuadmoin)
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## 🔭 Future Features <a name="future-features"></a>
